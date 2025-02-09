@@ -2,6 +2,11 @@
 set -x
 set -eo pipefail
 
+if ! [ -x "$(command -v sqlx)" ]; then
+    echo "Error: sqlx is not installed." >&2
+    echo "Run 'cargo install --version=0.5.7 sqlx-cli --no-default-features --features postgres' to install it." >&2
+    exit 1
+fi
 
 # Variables
 DB_USER="${POSTGRESUSER:=postgres}"
@@ -54,4 +59,6 @@ docker exec -it $CONTAINER_NAME psql -U $DB_USER -c "$CREATE_USER_SQL"
 GRANT_PRIVILEGES_SQL="ALTER USER $APP_USER CREATEDB;"
 docker exec -it $CONTAINER_NAME psql -U $DB_USER -c "$GRANT_PRIVILEGES_SQL"
 
-
+DATABASE_URL="postgresql://$APP_USER:$APP_USER_PASSWORD@localhost:$DB_PORT/$APP_DB_NAME"
+export DATABASE_URL
+sqlx database create
