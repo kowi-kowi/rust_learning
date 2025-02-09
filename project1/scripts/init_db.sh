@@ -62,3 +62,6 @@ docker exec -it $CONTAINER_NAME psql -U $DB_USER -c "$GRANT_PRIVILEGES_SQL"
 DATABASE_URL="postgresql://$APP_USER:$APP_USER_PASSWORD@localhost:$DB_PORT/$APP_DB_NAME"
 export DATABASE_URL
 sqlx database create
+#sqlx migrate add create_subscriptions_table
+sqlx migrate run
+>&2 echo "Database '$APP_DB_NAME' created and migrations run successfully."
