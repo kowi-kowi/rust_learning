@@ -1,6 +1,8 @@
 //! tests/health_check.rs
-
+use sqlx::{Connection, Executor, PgConnection, PgPool};
+use project1::configuration::get_configuration;
 use std::net::TcpListener;
+
 
 #[tokio::test]
     async fn health_check_works() {
@@ -24,7 +26,7 @@ use std::net::TcpListener;
         // Implementation for spawning the app
         let listner = TcpListener::bind("127.0.0.1:0").expect("Failed to bind to random port");
         let port = listner.local_addr().unwrap().port();
-        let server = project1::run(listner).expect("Failed to bind address");
+        let server = project1::startup::run(listner).expect("Failed to bind address");
         let _ = tokio::spawn(server);
         format!("http://127.0.0.1:{}", port)
     }
@@ -33,6 +35,11 @@ use std::net::TcpListener;
     async fn subscribe_returns_a_200_for_valid_form_data() {
         // Arrange
         let app_address = spawn_app().await;
+        let configuration = get_configuration().expect("Failed to read configuration.");
+        let connection_string = configuration.database.connection_string();
+        let connection = PgConnection::connect(&connection_string)
+            .await
+            .expect("Failed to connect to Postgres.");
         let client = reqwest::Client::new();
 
         let body = "name=le%20guin&email=ursula_le_guin%40gmail.com";
